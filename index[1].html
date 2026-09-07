@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>India Tourist Guide</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f7fb;color:#172033;font-family:Arial,sans-serif}
+header{background:linear-gradient(135deg,#0878d1,#064f9d);color:#fff;padding:24px 18px 30px;border-radius:0 0 28px 28px}
+.wrap{max-width:760px;margin:auto;padding:18px}
+header .wrap{padding-bottom:0}
+h1{margin:0 0 8px;font-size:26px}h2{margin:4px 0 8px;font-size:22px}h3{margin:0 0 7px}
+p{line-height:1.5}.muted{color:#687386;font-size:14px}
+.search{width:100%;padding:15px;border:0;border-radius:14px;font-size:15px;outline:none}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 3px 14px rgba(0,0,0,.06);margin-bottom:12px}
+.click{cursor:pointer}.click:active{transform:scale(.98)}
+.icon{font-size:30px;margin-bottom:9px}.category{display:flex;align-items:center;gap:10px}.category .icon{margin:0;font-size:25px}
+.section{font-size:18px;font-weight:700;margin:22px 0 12px}
+button{border:0;border-radius:11px;padding:11px 15px;font-weight:700;cursor:pointer}
+.primary{background:#0878d1;color:#fff}.secondary{background:#e9eef5;color:#172033}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.rating{color:#d78b00;font-weight:700}.pill{display:inline-block;background:#edf5ff;color:#075aa9;padding:6px 9px;border-radius:18px;font-size:12px;margin:3px}
+.place{display:flex;gap:12px;align-items:center}.placeIcon{width:52px;height:52px;border-radius:13px;background:#e9f3ff;display:grid;place-items:center;font-size:25px;flex:none}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.back{background:#e9eef5;color:#172033}
+footer{text-align:center;padding:30px 10px;color:#7b8698;font-size:12px}
+.notice{background:#fff8e6;border-left:4px solid #e0a400;padding:12px;border-radius:10px;font-size:13px}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+"use strict";
+
+var states = {
+  "Kerala": ["Kochi","Munnar","Alappuzha","Thiruvananthapuram"],
+  "Delhi": ["New Delhi","Old Delhi"],
+  "Telangana": ["Hyderabad","Warangal"],
+  "Andhra Pradesh": ["Vijayawada","Visakhapatnam","Tirupati"],
+  "Tamil Nadu": ["Chennai","Madurai","Ooty"],
+  "Karnataka": ["Bengaluru","Mysuru","Hampi"],
+  "Goa": ["Panaji","Calangute"],
+  "Rajasthan": ["Jaipur","Udaipur","Jodhpur"]
+};
+
+var stateIcons = {
+  "Kerala":"🌴","Delhi":"🏛️","Telangana":"🕌","Andhra Pradesh":"🌊",
+  "Tamil Nadu":"🛕","Karnataka":"🏰","Goa":"🏖️","Rajasthan":"🏜️"
+};
+
+var categories = [
+  ["🏛️","Tourist Attractions"],["🏨","Hotels"],["🛏️","Hostels"],
+  ["🍴","Restaurants"],["🚔","Police Stations"],["🏥","Hospitals"],
+  ["💊","Pharmacies"],["🏧","ATMs & Banks"],["🚉","Railway Stations"],
+  ["🚌","Bus Stations"],["✈️","Airports"],["🛍️","Shopping"]
+];
+
+var samplePlaces = {
+  "Hotels":["Hotel Abad Plaza","Holiday Inn","The Crown Hotel","Grand Kochi"],
+  "Hostels":["Zostel Kochi","Zion Backpackers","Zostel Plus Kochi"],
+  "Restaurants":["Fort Kochi Cafe","Kerala Kitchen","The Rice Boat","Indian Coffee House"],
+  "Police Stations":["Fort Kochi Police Station","Ernakulam North Police Station","Ernakulam South Police Station"],
+  "Hospitals":["Lakeshore Hospital","Aster Medcity","Amrita Hospital"],
+  "Tourist Attractions":["Fort Kochi","Mattancherry Palace","Marine Drive","Chinese Fishing Nets"],
+  "Pharmacies":["Apollo Pharmacy","MedPlus","Wellness Forever"],
+  "ATMs & Banks":["SBI ATM","HDFC Bank","ICICI Bank"],
+  "Railway Stations":["Ernakulam Junction","Ernakulam Town"],
+  "Bus Stations":["Vyttila Mobility Hub","Ernakulam KSRTC"],
+  "Airports":["Cochin International Airport"],
+  "Shopping":["Lulu Mall","MG Road Shopping Street"]
+};
+
+var currentState = "";
+var currentCity = "";
+var currentCategory = "";
+
+function el(){ return document.getElementById("app"); }
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+function mapsUrl(place, city, state){
+  return "https://www.google.com/maps/search/?api=1&query=" +
+    encodeURIComponent(place + ", " + city + ", " + state + ", India");
+}
+
+function home(){
+  var cards = "";
+  Object.keys(states).forEach(function(s){
+    cards += '<div class="card click" data-state="'+escapeHtml(s)+'">' +
+      '<div class="icon">'+stateIcons[s]+'</div><b>'+escapeHtml(s)+'</b>' +
+      '<div class="muted">'+escapeHtml(states[s].slice(0,2).join(" • "))+'</div></div>';
+  });
+
+  el().innerHTML =
+    '<header><div class="wrap">' +
+      '<h1>📍 India Tourist Guide</h1>' +
+      '<p>Explore places. Find hotels. Eat well. Stay safe.</p>' +
+      '<input id="search" class="search" placeholder="🔎 Search a state or city">' +
+    '</div></header>' +
+    '<main class="wrap">' +
+      '<div class="section">Select a State</div>' +
+      '<div class="grid">'+cards+'</div>' +
+      '<div class="section">📍 Find Places Near Me</div>' +
+      '<div class="card">' +
+        '<p class="muted">Find hotels, restaurants, hospitals, police stations and attractions around your current location.</p>' +
+        '<button id="near" class="primary">Find Nearby Places</button>' +
+      '</div>' +
+    '</main><footer>India Tourist Guide • Prototype</footer>';
+
+  document.querySelectorAll("[data-state]").forEach(function(x){
+    x.onclick = function(){ selectState(this.getAttribute("data-state")); };
+  });
+  document.getElementById("near").onclick = nearMe;
+  document.getElementById("search").oninput = searchHome;
+}
+
+function searchHome(){
+  var q = this.value.trim().toLowerCase();
+  if(!q) return;
+  var foundState = Object.keys(states).find(function(s){
+    return s.toLowerCase().indexOf(q) !== -1;
+  });
+  if(foundState){ selectState(foundState); return; }
+
+  var foundCity = null, owner = null;
+  Object.keys(states).some(function(s){
+    var c = states[s].find(function(city){
+      return city.toLowerCase().indexOf(q) !== -1;
+    });
+    if(c){foundCity=c;owner=s;return true;}
+    return false;
+  });
+  if(foundCity){currentState=owner;selectCity(foundCity);}
+}
+
+function selectState(s){
+  currentState=s;
+  var cards="";
+  states[s].forEach(function(c){
+    cards += '<div class="card click" data-city="'+escapeHtml(c)+'">' +
+      '<div class="icon">📍</div><b>'+escapeHtml(c)+'</b>' +
+      '<div class="muted">Hotels • Food • Attractions • Services</div></div>';
+  });
+  el().innerHTML =
+    '<main class="wrap"><div class="top"><button id="back" class="back">← Home</button></div>' +
+    '<h1>'+stateIcons[s]+' '+escapeHtml(s)+'</h1>' +
+    '<p class="muted">Choose a city or tourist destination.</p>' +
+    '<div class="grid">'+cards+'</div></main>';
+
+  document.getElementById("back").onclick=home;
+  document.querySelectorAll("[data-city]").forEach(function(x){
+    x.onclick=function(){selectCity(this.getAttribute("data-city"));};
+  });
+}
+
+function selectCity(c){
+  currentCity=c;
+  var cards="";
+  categories.forEach(function(item){
+    cards += '<div class="card click category" data-cat="'+escapeHtml(item[1])+'">' +
+      '<span class="icon">'+item[0]+'</span><b>'+escapeHtml(item[1])+'</b></div>';
+  });
+  el().innerHTML =
+    '<main class="wrap"><div class="top"><button id="back" class="back">← '+escapeHtml(currentState)+'</button></div>' +
+    '<h1>📍 '+escapeHtml(c)+'</h1>' +
+    '<div class="card"><h3>About '+escapeHtml(c)+'</h3>' +
+    '<p class="muted">Discover tourist attractions, accommodation, restaurants, emergency services, transport and useful places around '+escapeHtml(c)+'.</p></div>' +
+    '<div class="section">What do you need?</div><div class="grid">'+cards+'</div></main>';
+
+  document.getElementById("back").onclick=function(){selectState(currentState);};
+  document.querySelectorAll("[data-cat]").forEach(function(x){
+    x.onclick=function(){showCategory(this.getAttribute("data-cat"));};
+  });
+}
+
+function showCategory(cat){
+  currentCategory=cat;
+  var list=samplePlaces[cat] || ["Popular local place","Recommended place","Nearby service"];
+  var icon=(categories.find(function(x){return x[1]===cat;})||["📍"])[0];
+  var html='<main class="wrap"><div class="top"><button id="back" class="back">← '+escapeHtml(currentCity)+'</button></div>' +
+    '<h1>'+icon+' '+escapeHtml(cat)+'</h1><p class="muted">Places in '+escapeHtml(currentCity)+'</p>';
+
+  list.forEach(function(p,i){
+    var rating=(4.2+(i%4)*0.1).toFixed(1);
+    html += '<div class="card click place" data-place="'+escapeHtml(p)+'">' +
+      '<div class="placeIcon">'+icon+'</div><div><b>'+escapeHtml(p)+'</b>' +
+      '<div class="rating">⭐ '+rating+'</div><div class="muted">📍 '+escapeHtml(currentCity)+'</div></div></div>';
+  });
+  html += '</main>';
+  el().innerHTML=html;
+  document.getElementById("back").onclick=function(){selectCity(currentCity);};
+  document.querySelectorAll("[data-place]").forEach(function(x){
+    x.onclick=function(){details(this.getAttribute("data-place"));};
+  });
+}
+
+function details(place){
+  var icon=(categories.find(function(x){return x[1]===currentCategory;})||["📍"])[0];
+  var map=mapsUrl(place,currentCity,currentState);
+  el().innerHTML =
+    '<main class="wrap">' +
+      '<div class="top"><button id="back" class="back">← '+escapeHtml(currentCategory)+'</button></div>' +
+      '<div class="card">' +
+        '<div style="font-size:65px;text-align:center;padding:18px">'+icon+'</div>' +
+        '<h1>'+escapeHtml(place)+'</h1>' +
+        '<div class="rating">⭐ 4.5 • Tourist listing</div>' +
+        '<p class="muted">📍 '+escapeHtml(currentCity)+', '+escapeHtml(currentState)+', India</p>' +
+        '<p>Detailed information, contact details, facilities and directions can be displayed here when verified business data is added.</p>' +
+        '<span class="pill">✓ Tourist friendly</span><span class="pill">📍 Location</span>' +
+        '<div class="actions">' +
+          '<button id="call" class="primary">📞 Call</button>' +
+          '<button id="directions" class="primary">🗺️ Directions</button>' +
+        '</div>' +
+        '<div class="notice" style="margin-top:15px">For this prototype, phone numbers are not stored for most sample businesses. Add verified numbers before publishing.</div>' +
+      '</div>' +
+    '</main>';
+
+  document.getElementById("back").onclick=function(){showCategory(currentCategory);};
+  document.getElementById("directions").onclick=function(){window.open(map,"_blank");};
+  document.getElementById("call").onclick=function(){
+    var n=prompt("Enter the verified phone number for "+place+":");
+    if(n && /^[+0-9][0-9\\s-]{5,}$/.test(n.trim())){
+      window.location.href="tel:"+n.trim().replace(/[\\s-]/g,"");
+    }else if(n){alert("Please enter a valid phone number.");}
+  };
+}
+
+function nearMe(){
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var url="https://www.google.com/maps/search/?api=1&query="+
+        encodeURIComponent("hotels, restaurants, hospitals, police stations near me")+
+        "&query_place_id=";
+      window.open(url,"_blank");
+    },function(){
+      window.open("https://www.google.com/maps/search/?api=1&query="+
+        encodeURIComponent("hotels restaurants hospitals police stations near me"),"_blank");
+    });
+  }else{
+    window.open("https://www.google.com/maps/search/?api=1&query="+
+      encodeURIComponent("hotels restaurants hospitals police stations near me"),"_blank");
+  }
+}
+
+home();
+})();
+</script>
+</body>
+</html>
